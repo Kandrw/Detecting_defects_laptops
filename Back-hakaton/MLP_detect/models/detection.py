@@ -1,12 +1,16 @@
 from ultralytics import YOLO
 import os
+import torch
+from ultralytics import YOLO
+import os
 
 class DetectionModel:
     def __init__(self, config):
-        self.model = YOLO(config['model'])
         self.config = config
+        self.model = None  # Модель будет загружена позже
 
     def train_model(self):
+        self.model = YOLO(self.config['model'])
         self.model.train(
             data='configs/data.yaml',
             epochs=self.config['epochs'],
@@ -14,19 +18,22 @@ class DetectionModel:
             imgsz=self.config['img_size'],
             optimizer=self.config['optimizer'],
             lr0=self.config['learning_rate'],
-            momentum=self.config['momentum'],
             weight_decay=self.config['weight_decay'],
-            val=False
+            val=False,
+            verbose=True,
+            save=True,
+            project=self.config['model_save_path'],  # Используем 'project' вместо 'save_dir'
+            name='train_results',  # Можно задать любое имя
+            exist_ok = True
         )
-        print(f"YOLOv8 training completed. Model saved to {self.config['model_save_path']}")
+        print(f"YOLOv8 обучение завершено. Модель сохранена в {self.config['model_save_path']}")
 
-    def save_model(self, path):
-        self.model.save(path)
+    def load_model(self, model_path):
+        # Загружаем модель напрямую из файла
+        self.model = YOLO(model_path)
+        print(f"Модель загружена из {model_path}")
 
     def detect(self, image_path):
         results = self.model.predict(source=image_path)
         return results
 
-    def load_model(self, model_path):
-        self.model = YOLO(model_path)
-        return self.model
