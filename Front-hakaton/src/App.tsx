@@ -11,6 +11,7 @@ interface IDefects {
   Zamok: string;
   MissingScrew: string;
   Chips: string;
+  ImgRes: string;
 }
 
 export const MainPage = () => {
@@ -89,11 +90,11 @@ export const MainPage = () => {
     formData.append("serial_number", serialNumber);
 
     try {
-      const response = await api.postUpload();
+      const response = await api.postUpload(formData);
       if (response.status === 200) {
         toast.success("Фотографии отправлены на проверку успешно!");
         setSelectedImages([]);
-        setIsSubmitted(true); // Устанавливаем флаг отправки
+        setIsSubmitted(true);
         setTimeout(async () => {
           const result = await response.data;
           setEditedDefectData(result);
