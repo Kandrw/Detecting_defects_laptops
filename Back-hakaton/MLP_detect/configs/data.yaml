@@ -1,5 +1,0 @@
-train: /home/neznayka08/PycharmProjects/hacaton1/data/train/images
-val: /home/neznayka08/PycharmProjects/hacaton1/data/train/images
-
-nc: 7  # Количество классов (0-6)
-names: ['0','1', '2', '3', '4', '5', '6']
