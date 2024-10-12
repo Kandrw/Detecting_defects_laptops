@@ -61,7 +61,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    "detecting_defects_laptops_soft"
+    "detecting_defects_laptops_soft",
+    "MLP_detect"
 ]
 
 REST_FRAMEWORK = {

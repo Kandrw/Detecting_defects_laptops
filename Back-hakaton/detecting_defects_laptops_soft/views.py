@@ -11,6 +11,11 @@ from django.core.files.base import ContentFile
 
 from detecting_defects_laptops_soft.models import ImageModel
 
+from MLP_detect.apps import Train
+
+
+
+
 
 class ImageUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -22,6 +27,8 @@ class ImageUploadView(APIView):
         for image in images:
             ImageModel.objects.create(image=image, serial_number=serial_number)
 
+
+        # Здесь будет правка при готовой нейросети
         if images:
             with images[0].open() as img_file:
                 img_content = img_file.read()
@@ -32,6 +39,9 @@ class ImageUploadView(APIView):
                 img_data = f"data:{img_format};base64,{encoded_img}"
         else:
             img_data = None
+
+        Train()
+
         result_data = {
             "Scratches": "Detected",
             "BrokenPixels": "Not Detected",
@@ -41,7 +51,7 @@ class ImageUploadView(APIView):
             "Chips": "Not Detected",
             "ImgRes": img_data
         }
-
+        
         # time.sleep(5)
 
         return JsonResponse(result_data, status=200)
