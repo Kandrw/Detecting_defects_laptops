@@ -43,11 +43,13 @@ CORS_ALLOW_METHODS = [
 ALLOWED_HOSTS = []
 
 import os
+import sys
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# sys.path.insert(0, os.path.join(BASE_DIR, '../mlp'))
 # Application definition
 
 INSTALLED_APPS = [
@@ -59,7 +61,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    "detecting_defects_laptops_soft"
+    "detecting_defects_laptops_soft",
+    "MLP_detect"
 ]
 
 REST_FRAMEWORK = {
@@ -167,3 +170,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
