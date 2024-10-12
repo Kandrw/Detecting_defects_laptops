@@ -66,6 +66,7 @@ from docx import Document
 def submit_report(request):
     serial_number = request.data.get('serialNumber')
     defects = request.data.get('defects')
+    images = request.FILES.getlist('images')  
 
     if not defects:
         return JsonResponse({'error': 'Defects data is missing or empty'}, status=400)
@@ -73,9 +74,13 @@ def submit_report(request):
     doc = Document()
     doc.add_heading('Отчет по дефектам', level=1)
     doc.add_paragraph(f'Серийный номер: {serial_number}')
-
-    for key, value in defects.items():
+    
+    for key, value in list(defects.items())[:-1]:
         doc.add_paragraph(f'{key}: {value}')
+
+    for image in images:
+        image_content = ContentFile(image.read(), name=image.name)
+        doc.add_picture(image_content)  
 
     file_path = f'reports/report_{serial_number}.docx'
     doc.save(file_path)
@@ -86,26 +91,36 @@ def submit_report(request):
         response.write(f.read())
         return response
 
+# 
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 
 @api_view(['POST'])
 def submit_report_pdf(request):
     serial_number = request.data.get('serialNumber')
     defects = request.data.get('defects')
+    images = request.FILES.getlist('images') 
 
     if not defects:
         return JsonResponse({'error': 'Defects data is missing or empty'}, status=400)
 
     file_path = f'reports/report_{serial_number}.pdf'
     c = canvas.Canvas(file_path, pagesize=letter)
+    
     c.drawString(100, 750, f'Report about Laptop defects')
     c.drawString(100, 735, f'Serial Number: {serial_number}')
 
     y = 700
-    for key, value in defects.items():
+    for key, value in list(defects.items())[:-1]:
         c.drawString(100, y, f'{key}: {value}')
         y -= 20
+
+    # 
+    # for image in images:
+    #     image_reader = ImageReader(image)  
+    #     c.drawImage(image_reader, 100, y, width=200, height=200)
+    #     y -= 220  # Уменьшите y, чтобы не перекрывать текст
 
     c.save()
 

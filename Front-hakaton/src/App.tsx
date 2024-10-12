@@ -242,7 +242,7 @@ export const MainPage = () => {
       ) : (
         <div className="flex flex-row items-start justify-center">
           {editedDefectData && (
-            <div className="mt-4 p-4 bg-gray-100 rounded-md flex flex-col items-center">
+            <div className="p-4 bg-gray-100 rounded-md flex flex-col items-center">
               <h3 className="text-xl font-bold mb-2">Результаты проверки</h3>
               <ReportContainer
                 defectsData={editedDefectData}
