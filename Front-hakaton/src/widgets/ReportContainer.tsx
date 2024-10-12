@@ -8,6 +8,7 @@ interface IDefects {
   Zamok: string;
   MissingScrew: string;
   Chips: string;
+  ImgRes: string;
 }
 
 interface ResponseContainerProps {
@@ -20,7 +21,7 @@ export const ReportContainer: React.FC<ResponseContainerProps> = ({
   onDefectChange,
 }) => {
   return (
-    <div className="w-[30rem] ">
+    <div className="w-[30rem]">
       <Card
         title="Scratches"
         value={defectsData.Scratches}
@@ -51,6 +52,18 @@ export const ReportContainer: React.FC<ResponseContainerProps> = ({
         value={defectsData.Chips}
         onChange={(e) => onDefectChange("Chips", e.target.value)}
       />
+      <div className="flex flex-col items-center">
+        <h3 className="font-bold">Результат изображения:</h3>
+        {defectsData.ImgRes ? (
+          <img
+            src={defectsData.ImgRes}
+            alt="Результат"
+            className="w-4/5 h-auto rounded-md"
+          />
+        ) : (
+          <p className="text-gray-500">Изображение не доступно</p>
+        )}
+      </div>
     </div>
   );
 };

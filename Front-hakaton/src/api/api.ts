@@ -5,8 +5,12 @@ export const instance = axios.create({
 });
 
 export const api = {
-  async postUpload() {
-    const response = await instance.post("/upload/");
+  async postUpload(formData: FormData) {
+    const response = await instance.post("/upload/", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response;
   },
   async postReport(serialNumber: string, defects: object) {
