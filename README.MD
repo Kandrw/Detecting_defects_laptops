@@ -17,6 +17,7 @@
 
 
 ### Запуск frontend
+    npm install
     npm run dev
 
 
