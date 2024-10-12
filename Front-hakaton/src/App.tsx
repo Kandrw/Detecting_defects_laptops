@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
+import { api } from "./api/api";
+import { ReportContainer } from "./widgets/ReportContainer";
 
 interface IDefects {
   Scratches: string;
@@ -10,29 +11,34 @@ interface IDefects {
   Zamok: string;
   MissingScrew: string;
   Chips: string;
-  ImgRes: string;
 }
 
 export const MainPage = () => {
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [serialNumber, setSerialNumber] = useState<string>(""); // Состояние для серийного номера
+  const [serialNumber, setSerialNumber] = useState<string>("");
   const [showAllImages, setShowAllImages] = useState(false);
   const [editedDefectData, setEditedDefectData] = useState<IDefects | null>(
     null
   );
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // Функция для сброса всех данных
+  const handleDefectChange = (key: keyof IDefects, value: string) => {
+    if (editedDefectData) {
+      setEditedDefectData({ ...editedDefectData, [key]: value });
+    }
+  };
+
   const resetAll = () => {
     setSelectedImages([]);
     setSerialNumber("");
     setEditedDefectData(null);
+    setIsSubmitted(false);
     toast.info("Все данные сброшены!");
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const filesArray = Array.from(event.target.files);
-
       const validImages = filesArray.filter((file) =>
         file.type.startsWith("image/")
       );
@@ -81,20 +87,13 @@ export const MainPage = () => {
       formData.append("images", image);
     });
     formData.append("serial_number", serialNumber);
-    toast.success("Отправка сообщений на сервер...");
+
     try {
-      const response = await axios.post(
-        "http://localhost:8000/api/upload/",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = await api.postUpload();
       if (response.status === 200) {
         toast.success("Фотографии отправлены на проверку успешно!");
         setSelectedImages([]);
+        setIsSubmitted(true); // Устанавливаем флаг отправки
         setTimeout(async () => {
           const result = await response.data;
           setEditedDefectData(result);
@@ -108,29 +107,17 @@ export const MainPage = () => {
     }
   };
 
-  const handleDefectChange = (key: keyof IDefects, value: string) => {
-    if (editedDefectData) {
-      setEditedDefectData({ ...editedDefectData, [key]: value });
-    }
-  };
-
   const handleSubmitReport = async () => {
     try {
-      const response = await axios.post(
-        "http://localhost:8000/api/submit-report/",
-        {
-          serialNumber,
-          defects: editedDefectData,
-        },
-        {
-          responseType: "blob", // Чтобы получить файл для скачивания
-        }
-      );
-
+      if (!editedDefectData) {
+        toast.error("Нет данных о дефектах для отправки!");
+        return;
+      }
+      const response = await api.postReport(serialNumber, editedDefectData);
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "report.docx"); // Имя загружаемого файла
+      link.setAttribute("download", "report.docx");
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
@@ -146,186 +133,113 @@ export const MainPage = () => {
 
   return (
     <div className="relative pt-[2rem]">
-      {/* Кнопка для сброса всех данных */}
       <button
         className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
         onClick={resetAll}
       >
-        Перезагрузить
+        Новый ноутбук
       </button>
 
-      <div className="max-w-md mx-auto p-6 bg-white border border-gray-300 rounded-lg shadow-lg text-center">
-        <h2 className="text-2xl font-bold mb-4">Загрузите свои фотографии</h2>
+      {!isSubmitted ? (
+        <div className="max-w-md mx-auto p-6 bg-white border border-gray-300 rounded-lg shadow-lg text-center">
+          <h2 className="text-2xl font-bold mb-4">Загрузите свои фотографии</h2>
 
-        <input
-          type="file"
-          multiple
-          accept="image/*"
-          onChange={handleFileChange}
-          className="hidden"
-          id="file-upload"
-        />
-        <label
-          htmlFor="file-upload"
-          className="cursor-pointer inline-block w-[15rem] px-6 py-2 mb-4 bg-green-500 text-white rounded-md hover:bg-green-600"
-        >
-          Загрузить изображения
-        </label>
-
-        {selectedImages.length > 0 && (
-          <button
-            className="px-6 py-2 mb-4 w-[15rem] bg-red-500 text-white rounded-md hover:bg-red-600"
-            onClick={handleRemoveAllImages}
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+            id="file-upload"
+          />
+          <label
+            htmlFor="file-upload"
+            className="cursor-pointer inline-block w-[15rem] px-6 py-2 mb-4 bg-green-500 text-white rounded-md hover:bg-green-600"
           >
-            Удалить все изображения
-          </button>
-        )}
+            Загрузить изображения
+          </label>
 
-        <div>
-          {selectedImages.length > 5 && (
+          {selectedImages.length > 0 && (
             <button
-              className="text-blue-500 underline mb-4"
-              onClick={() => setShowAllImages(!showAllImages)}
+              className="px-6 py-2 mb-4 w-[15rem] bg-red-500 text-white rounded-md hover:bg-red-600"
+              onClick={handleRemoveAllImages}
             >
-              {showAllImages
-                ? "Свернуть"
-                : `Показать все (${selectedImages.length})`}
+              Удалить все изображения
             </button>
           )}
-        </div>
 
-        <div className="flex flex-wrap justify-center gap-4 mb-4">
-          {selectedImages.length > 0 ? (
-            visibleImages.map((image, index) => (
-              <div key={index} className="relative group w-24 h-24">
-                <img
-                  src={URL.createObjectURL(image)}
-                  alt={`Preview ${index + 1}`}
-                  className="w-full h-full object-cover rounded-lg shadow-md"
-                />
-                <button
-                  onClick={() => handleRemoveImage(index)}
-                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  ×
-                </button>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-500">Фотографии не выбраны</p>
-          )}
-        </div>
-
-        <input
-          type="text"
-          placeholder="Введите серийный номер"
-          value={serialNumber}
-          onChange={(e) => setSerialNumber(e.target.value)}
-          className="block w-full mb-4 p-2 border rounded-md"
-        />
-
-        <button
-          className="px-6 py-2 w-full bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          onClick={handleSubmitImages}
-        >
-          Отправить фотографии на проверку
-        </button>
-
-        {editedDefectData && (
-          <div className="mt-4 p-4 bg-gray-100 rounded-md">
-            <h3 className="text-xl font-bold mb-2">Результаты проверки</h3>
-
-            <div>
-              <label>Scratches:</label>
-              <input
-                type="text"
-                value={editedDefectData.Scratches}
-                onChange={(e) =>
-                  handleDefectChange("Scratches", e.target.value)
-                }
-                className="w-full p-2 mb-2 border rounded-md"
-              />
-            </div>
-            <div>
-              <label>BrokenPixels:</label>
-              <input
-                type="text"
-                value={editedDefectData.BrokenPixels}
-                onChange={(e) =>
-                  handleDefectChange("BrokenPixels", e.target.value)
-                }
-                className="w-full p-2 mb-2 border rounded-md"
-              />
-            </div>
-            <div>
-              <label>ProblemsWithButtons:</label>
-              <input
-                type="text"
-                value={editedDefectData.ProblemsWithButtons}
-                onChange={(e) =>
-                  handleDefectChange("ProblemsWithButtons", e.target.value)
-                }
-                className="w-full p-2 mb-2 border rounded-md"
-              />
-            </div>
-            <div>
-              <label>Zamok:</label>
-              <input
-                type="text"
-                value={editedDefectData.Zamok}
-                onChange={(e) => handleDefectChange("Zamok", e.target.value)}
-                className="w-full p-2 mb-2 border rounded-md"
-              />
-            </div>
-            <div>
-              <label>MissingScrew:</label>
-              <input
-                type="text"
-                value={editedDefectData.MissingScrew}
-                onChange={(e) =>
-                  handleDefectChange("MissingScrew", e.target.value)
-                }
-                className="w-full p-2 mb-2 border rounded-md"
-              />
-            </div>
-            <div>
-              <label>Chips:</label>
-              <input
-                type="text"
-                value={editedDefectData.Chips}
-                onChange={(e) => handleDefectChange("Chips", e.target.value)}
-                className="w-full p-2 mb-2 border rounded-md"
-              />
-            </div>
-            <div>
-              <label>Изображение с дефектом</label>
-              {/* <input
-                type="text"
-                value={editedDefectData.Chips}
-                onChange={(e) => handleDefectChange("Chips", e.target.value)}
-                className="w-full p-2 mb-2 border rounded-md"
-              /> */}
-
-{/* <h3>Предварительный просмотр изображения:</h3> */}
-              <img
-                src={editedDefectData.ImgRes}
-                alt="Изображение с дефектом"
-                className="mt-2"
-                style={{ maxWidth: '100%', height: 'auto' }} // Стили для адаптации изображения
-              />
-            </div>
-
-            <button
-              className="px-6 py-2 mt-4 bg-green-500 text-white rounded-md hover:bg-green-600"
-              onClick={handleSubmitReport}
-            >
-              Получить отчет
-            </button>
+          <div>
+            {selectedImages.length > 5 && (
+              <button
+                className="text-blue-500 underline mb-4"
+                onClick={() => setShowAllImages(!showAllImages)}
+              >
+                {showAllImages
+                  ? "Свернуть"
+                  : `Показать все (${selectedImages.length})`}
+              </button>
+            )}
           </div>
-        )}
 
-        <ToastContainer />
-      </div>
+          <div className="flex flex-wrap justify-center gap-4 mb-4">
+            {selectedImages.length > 0 ? (
+              visibleImages.map((image, index) => (
+                <div key={index} className="relative group w-24 h-24">
+                  <img
+                    src={URL.createObjectURL(image)}
+                    alt={`Preview ${index + 1}`}
+                    className="w-full h-full object-cover rounded-lg shadow-md"
+                  />
+                  <button
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500">Фотографии не выбраны</p>
+            )}
+          </div>
+
+          <input
+            type="text"
+            placeholder="Введите серийный номер"
+            value={serialNumber}
+            onChange={(e) => setSerialNumber(e.target.value)}
+            className="block w-full mb-4 p-2 border rounded-md"
+          />
+
+          <button
+            className="px-6 py-2 w-full bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            onClick={handleSubmitImages}
+          >
+            Отправить фотографии на проверку
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-row items-start justify-center">
+          {editedDefectData && (
+            <div className="mt-4 p-4 bg-gray-100 rounded-md flex flex-col items-center">
+              <h3 className="text-xl font-bold mb-2">Результаты проверки</h3>
+              <ReportContainer
+                defectsData={editedDefectData}
+                onDefectChange={handleDefectChange}
+              />
+
+              <button
+                className="px-6 py-2 mt-4 bg-green-500 text-white rounded-md hover:bg-green-600"
+                onClick={handleSubmitReport}
+              >
+                Получить отчет
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      <ToastContainer />
     </div>
   );
 };
