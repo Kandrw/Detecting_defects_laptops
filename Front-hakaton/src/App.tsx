@@ -118,13 +118,33 @@ export const MainPage = () => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "report.docx");
+      link.setAttribute("download", `report_${serialNumber}.docx`);
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Ошибка при отправке отчета!");
+    }
+  };
+
+  const handleSubmitReportPDF = async () => {
+    try {
+      if (!editedDefectData) {
+        toast.error("Нет данных о дефектах для отправки!");
+        return;
+      }
+      const response = await api.postReportPDF(serialNumber, editedDefectData);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `report_${serialNumber}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      toast.error("Ошибка при отправке PDF отчета!");
     }
   };
 
@@ -229,12 +249,21 @@ export const MainPage = () => {
                 onDefectChange={handleDefectChange}
               />
 
-              <button
-                className="px-6 py-2 mt-4 bg-green-500 text-white rounded-md hover:bg-green-600"
-                onClick={handleSubmitReport}
-              >
-                Получить отчет
-              </button>
+              <div className="flex gap-4 mt-4">
+                <button
+                  className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                  onClick={handleSubmitReport}
+                >
+                  Получить отчет (DOCX)
+                </button>
+
+                <button
+                  className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  onClick={handleSubmitReportPDF}
+                >
+                  Получить отчет (PDF)
+                </button>
+              </div>
             </div>
           )}
         </div>

@@ -1,8 +1,10 @@
+import logging
+import os
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 import time
 
 
@@ -52,7 +54,6 @@ class ImageUploadView(APIView):
             "ImgRes": img_data
         }
         
-        # time.sleep(5)
 
         return JsonResponse(result_data, status=200)
 
@@ -60,30 +61,6 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from django.core.files.storage import default_storage
 from docx import Document
-
-# @api_view(['POST'])
-# def submit_report(request):
-#     serial_number = request.data.get('serialNumber')
-#     defects = request.data.get('defects')
-
-    
-#     doc = Document()
-#     doc.add_heading('Отчет по дефектам', level=1)
-#     doc.add_paragraph(f'Серийный номер: {serial_number}')
-    
-#     for key, value in defects.items():
-#         doc.add_paragraph(f'{key}: {value}')
-
-    
-#     file_path = f'reports/report_{serial_number}.docx'
-#     doc.save(file_path)
-
-    
-#     with open(file_path, 'rb') as f:
-#         response = JsonResponse({'status': 'success'})
-#         response['Content-Disposition'] = f'attachment; filename="report_{serial_number}.docx"'
-#         response.write(f.read())
-#         return response
 
 @api_view(['POST'])
 def submit_report(request):
@@ -106,5 +83,34 @@ def submit_report(request):
     with open(file_path, 'rb') as f:
         response = JsonResponse({'status': 'success'})
         response['Content-Disposition'] = f'attachment; filename="report_{serial_number}.docx"'
+        response.write(f.read())
+        return response
+
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+
+@api_view(['POST'])
+def submit_report_pdf(request):
+    serial_number = request.data.get('serialNumber')
+    defects = request.data.get('defects')
+
+    if not defects:
+        return JsonResponse({'error': 'Defects data is missing or empty'}, status=400)
+
+    file_path = f'reports/report_{serial_number}.pdf'
+    c = canvas.Canvas(file_path, pagesize=letter)
+    c.drawString(100, 750, f'Report about Laptop defects')
+    c.drawString(100, 735, f'Serial Number: {serial_number}')
+
+    y = 700
+    for key, value in defects.items():
+        c.drawString(100, y, f'{key}: {value}')
+        y -= 20
+
+    c.save()
+
+    with open(file_path, 'rb') as f:
+        response = JsonResponse({'status': 'success'})
+        response['Content-Disposition'] = f'attachment; filename="report_{serial_number}.pdf"'
         response.write(f.read())
         return response

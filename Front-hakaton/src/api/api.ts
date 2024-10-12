@@ -26,4 +26,17 @@ export const api = {
     );
     return response;
   },
+  async postReportPDF(serialNumber: string, defects: object) {
+    const response = await instance.post(
+      "/submit-report-pdf/",
+      {
+        serialNumber,
+        defects,
+      },
+      {
+        responseType: "blob",
+      }
+    );
+    return response;
+  },
 };
