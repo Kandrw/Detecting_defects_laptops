@@ -52,7 +52,7 @@ export const ReportContainer: React.FC<ResponseContainerProps> = ({
         value={defectsData.Chips}
         onChange={(e) => onDefectChange("Chips", e.target.value)}
       />
-      <div className="flex flex-col items-center">
+      {/* <div className="flex flex-col items-center">
         <h3 className="font-bold">Результат изображения:</h3>
         {defectsData.ImgRes ? (
           <img
@@ -63,7 +63,7 @@ export const ReportContainer: React.FC<ResponseContainerProps> = ({
         ) : (
           <p className="text-gray-500">Изображение не доступно</p>
         )}
-      </div>
+      </div> */}
     </div>
   );
 };

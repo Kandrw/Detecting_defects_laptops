@@ -13,7 +13,7 @@ from django.core.files.base import ContentFile
 
 from detecting_defects_laptops_soft.models import ImageModel
 
-from MLP_detect.apps import Train
+# from MLP_detect.apps import Train
 
 
 
@@ -42,7 +42,7 @@ class ImageUploadView(APIView):
         else:
             img_data = None
 
-        Train()
+        # Train()
 
         result_data = {
             "Scratches": "Detected",

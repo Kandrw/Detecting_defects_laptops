@@ -62,7 +62,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     "detecting_defects_laptops_soft",
-    "MLP_detect"
+    # "MLP_detect"
 ]
 
 REST_FRAMEWORK = {
