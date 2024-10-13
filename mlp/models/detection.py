@@ -23,6 +23,8 @@ class DetectionModel:
             optimizer=self.config['optimizer'],
             lr0=self.config['learning_rate'],
             weight_decay=self.config['weight_decay'],
+            iou = self.config['iou'],
+            conf=self.config['conf'],
             val=False,
             verbose=True,
             save=True,

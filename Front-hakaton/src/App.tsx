@@ -5,15 +5,16 @@ import { api } from "./api/api";
 import { ReportContainer } from "./widgets/ReportContainer";
 
 interface IDefects {
-  Scratches: string;
-  BrokenPixels: string;
-  ProblemsWithButtons: string;
-  Zamok: string;
+  Lock: string;
+  UnknownDefect: string;
   MissingScrew: string;
-  Chips: string;
+  KeysProblems: string;
+  Chipped: string;
+  BrokenPixel: string;
+  Scratch: string;
+  NoDefect: string;
   ImgRes: string;
 }
-
 export const MainPage = () => {
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [serialNumber, setSerialNumber] = useState<string>("");
@@ -40,16 +41,19 @@ export const MainPage = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const filesArray = Array.from(event.target.files);
+      const validFormats = ["image/jpeg", "image/jpg", "image/png"];
+
       const validImages = filesArray.filter((file) =>
-        file.type.startsWith("image/")
+        validFormats.includes(file.type)
       );
+
       const invalidFiles = filesArray.filter(
-        (file) => !file.type.startsWith("image/")
+        (file) => !validFormats.includes(file.type)
       );
 
       if (invalidFiles.length > 0) {
         toast.error(
-          "Некоторые файлы не являются изображениями и были отклонены!"
+          "Некоторые файлы имеют недопустимый формат и были отклонены!"
         );
       }
 
@@ -57,7 +61,7 @@ export const MainPage = () => {
         setSelectedImages((prevImages) => [...prevImages, ...validImages]);
         toast.success("Изображения загружены успешно!");
       } else if (validImages.length === 0 && invalidFiles.length > 0) {
-        toast.error("Вы загрузили только файлы, не являющиеся изображениями!");
+        toast.error("Вы загрузили только файлы с недопустимым форматом!");
       }
     }
   };
@@ -98,7 +102,7 @@ export const MainPage = () => {
         setTimeout(async () => {
           const result = await response.data;
           setEditedDefectData(result);
-        }, 5000);
+        });
       } else {
         toast.error("Ошибка при отправке фотографий!");
       }
@@ -240,31 +244,75 @@ export const MainPage = () => {
           </button>
         </div>
       ) : (
-        <div className="flex flex-row items-start justify-center">
+        // <div className="flex flex-row items-start justify-center">
+        //   {editedDefectData && (
+        //     <div className="p-4 bg-gray-100 rounded-md flex flex-col items-center">
+        //       <h3 className="text-xl font-bold mb-2">Результаты проверки</h3>
+        //       <ReportContainer
+        //         defectsData={editedDefectData}
+        //         onDefectChange={handleDefectChange}
+        //       />
+
+        //       <div className="flex gap-4 mt-4">
+        //         <button
+        //           className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+        //           onClick={handleSubmitReport}
+        //         >
+        //           Получить отчет (DOCX)
+        //         </button>
+
+        //         <button
+        //           className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+        //           onClick={handleSubmitReportPDF}
+        //         >
+        //           Получить отчет (PDF)
+        //         </button>
+        //       </div>
+        //     </div>
+        //   )}
+        // </div>
+        <div className="flex flex-row bg-gray-200 rounded-md justify-between items-start max-w-6xl mx-auto mt-8">
           {editedDefectData && (
-            <div className="mt-4 p-4 bg-gray-100 rounded-md flex flex-col items-center">
-              <h3 className="text-xl font-bold mb-2">Результаты проверки</h3>
-              <ReportContainer
-                defectsData={editedDefectData}
-                onDefectChange={handleDefectChange}
-              />
-
-              <div className="flex gap-4 mt-4">
-                <button
-                  className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-                  onClick={handleSubmitReport}
-                >
-                  Получить отчет (DOCX)
-                </button>
-
-                <button
-                  className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                  onClick={handleSubmitReportPDF}
-                >
-                  Получить отчет (PDF)
-                </button>
+            <>
+              <div className="w-full p-4 ">
+                <h3 className="text-xl font-bold mb-2">Результаты проверки</h3>
+                <ReportContainer
+                  defectsData={editedDefectData}
+                  onDefectChange={handleDefectChange}
+                />
               </div>
-            </div>
+
+              <div className="w-full flex flex-col items-center p-4">
+                <h3 className="text-xl font-bold mb-2">
+                  Результат изображения
+                </h3>
+                {editedDefectData.ImgRes ? (
+                  <img
+                    src={editedDefectData.ImgRes}
+                    alt="Результат"
+                    className="w-full h-auto rounded-md pt-7"
+                  />
+                ) : (
+                  <p className="text-gray-500">Изображение не доступно</p>
+                )}
+
+                <div className="flex gap-4 mt-6">
+                  <button
+                    className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                    onClick={handleSubmitReport}
+                  >
+                    Получить отчет (DOCX)
+                  </button>
+
+                  <button
+                    className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                    onClick={handleSubmitReportPDF}
+                  >
+                    Получить отчет (PDF)
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </div>
       )}

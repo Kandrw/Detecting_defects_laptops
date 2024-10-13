@@ -16,17 +16,7 @@ from detecting_defects_laptops_soft.models import ImageModel
 
 import subprocess
 from subprocess import Popen, PIPE
-# from MLP_detect.mlp.mlp_api import Predict
 
-# from detecting_defects_laptops_soft.mlp.run_predictions import Predict_
-
-# from mlp_api import Predict
-# from models.detection import DetectionModel
-# from MLP_detect.mlp.run_predictions import Predict_
-
-# from MLP_detect.mlp.test import Predict
-
-# from mlp.mlp_api import Predict_
 from pathlib import Path
 
 class ImageUploadView(APIView):
@@ -37,70 +27,88 @@ class ImageUploadView(APIView):
         images = request.FILES.getlist('images')
         ARGS_img = ""
         PATH_OUTPUT = "/home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/mlp/output_txt_files/"
-        RESULTS = []
+        results = []
+        data_img = []
+        i = 0
         for image in images:
             ImageModel.objects.create(image=image, serial_number=serial_number)
             print("[get] image", image)
             abs_path = "/home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/Back-hakaton/"
             dir = abs_path + f'media/images/{serial_number}/'
             ARGS_img += str(dir)+str(image) + " "
-            RESULTS.append(PATH_OUTPUT + str(Path(image).stem))
-
-        # Здесь будет правка при готовой нейросети
-        if images:
-            with images[0].open() as img_file:
+            print("image",image)
+            # print("str(Path(image).stem) ", str(Path(image).stem))
+            print("PATH_OUTPUT ", PATH_OUTPUT)
+            # tr = PATH_OUTPUT + str(Path(image).stem) + ".txt"
+            # print(tr)
+            print("str(Path(image.name).stem) ", str(Path(image.name).stem))
+            results.append(PATH_OUTPUT + str(Path(image.name).stem) + ".txt")
+            # path_img = PATH_OUTPUT + str(image)
+            #data_img.append(img_data)
+            with images[i].open() as img_file:
                 img_content = img_file.read()
                 encoded_img = base64.b64encode(img_content).decode('utf-8')
-                img_format = images[0].content_type  # Получаем формат изображения (например, image/png)
+                img_format = images[i].content_type  # Получаем формат изображения (например, image/png)
 
                 # Форматируем изображение в нужный вид
                 img_data = f"data:{img_format};base64,{encoded_img}"
-        else:
-            img_data = None
-
-        # Predict(images)
-        # subprocess.run(["python", "./mlp/run_predictions.py"])
-        # PATH_ML = "/home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/mlp/run_predictions.py"
-        
-        # os.environ["PYTHONPATH"] = "$PYTHONPATH:../mlp"
-
-
-        # result = subprocess.run(['export', 'PYTHONPATH'], capture_output=True, text=True)
-        # print(result.stdout)
-
+            data_img.append(img_data)
+            # results.append(PATH_OUTPUT + "photo_2024-10-09_14-50-32.txt")
+            i += 1
 
         PATH_ML = "../mlp/run_predictions.py"
         PATH_RUN = "/home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/mlp"
         
         # ARGS = images
-
-        out, err = Popen('python3 ' + PATH_ML + " " + ARGS_img, cwd=PATH_RUN, shell=True, stdout=PIPE).communicate()
-        # print("DDDDDDDDF: ", str(out, 'utf-8'))
-        # path_res = Path().stem
-        result_data_s = []
-        for i in range(len(RESULTS)):
-            str1 = "Not Detected"
-            str2 = "Not Detected"
-            str3 = "Not Detected"
-            str4 = "Not Detected"
-            str5 = "Not Detected"
-            str6 = "Not Detected"
-            
-            
-            if():
-            str1 = asdasdd
-            result_data = {
-                "Scratches": str1,
-                "BrokenPixels": "Not Detected",
-                "ProblemsWithButtons": "Detected",
-                "Zamok": "Not Detected",
-                "MissingScrew": "Detected",
-                "Chips": "Not Detected",
-                "ImgRes": img_data
-            }
-            result_data_s.append(result_data)
+        if 1:
+            out, err = Popen('python3 ' + PATH_ML + " " + ARGS_img, cwd=PATH_RUN, shell=True, stdout=PIPE).communicate()
+            print("ML", out)
         
+        result_data_s = []
+        # errors_str = [
+        #     "Lock",
+        #     "Unknown defect",
+        #     "the screw is missing",
+        #     "problem with the keys",
+        #     "chipped",
+        #     "broken pixel",
+        #     "scratch",
+        #     "no defect"
+        # ]
+        errors_str = [
+            "Lock",
+            "UnknownDefect",
+            "MissingScrew",
+            "KeysProblems",
+            "Chipped",
+            "BrokenPixel",
+            "Scratch",
+            "NoDefect"
+        ]
 
+        result_data = {
+            "Lock": "",
+            "UnknownDefect":"",
+            "MissingScrew":"",
+            "KeysProblems":"",
+            "Chipped":"",
+            "BrokenPixel":"",
+            "Scratch":"",
+            "NoDefect":"",
+            "ImgRes":data_img
+        }
+        for i in range(len(results)):
+            with open(results[i], "r") as file:
+                for line in file:
+                    print(line)
+                    key = (errors_str[int(line[0])])
+                    
+                    result_data[key] = result_data[key] + line[1:]
+                    if(result_data[key][-1] == " " or result_data[key][-1] == "\n"):
+                        result_data[key] = result_data[key][:-1]
+            
+
+        print(result_data)
         return JsonResponse(result_data, status=200)
 
 from django.http import JsonResponse
@@ -120,9 +128,10 @@ def submit_report(request):
     doc.add_heading('Отчет по дефектам', level=1)
     doc.add_paragraph(f'Серийный номер: {serial_number}')
 
-    for key, value in defects.items():
+    # for key, value in defects.items():
+    #     doc.add_paragraph(f'{key}: {value}')
+    for key, value in list(defects.items())[:-1]:
         doc.add_paragraph(f'{key}: {value}')
-
     file_path = f'reports/report_{serial_number}.docx'
     doc.save(file_path)
 
@@ -149,10 +158,12 @@ def submit_report_pdf(request):
     c.drawString(100, 735, f'Serial Number: {serial_number}')
 
     y = 700
-    for key, value in defects.items():
+    # for key, value in defects.items():
+    #     c.drawString(100, y, f'{key}: {value}')
+    #     y -= 20
+    for key, value in list(defects.items())[:-1]:
         c.drawString(100, y, f'{key}: {value}')
         y -= 20
-
     c.save()
 
     with open(file_path, 'rb') as f:

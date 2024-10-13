@@ -19,7 +19,8 @@ class ClassificationModel(nn.Module):
         return self.model(x)
 
     def train_model(self, train_loader, valid_loader=None):
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
+        optimizer = torch.optim.Adam(self.model.parameters(), 
+                                     lr=self.config['learning_rate'], d=self.config['dropout'])
         criterion = nn.CrossEntropyLoss()
 
         for epoch in range(self.config['epochs']):

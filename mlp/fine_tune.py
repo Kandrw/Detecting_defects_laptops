@@ -4,6 +4,7 @@ from models.detection import DetectionModel
 from utils.data_loader import get_data_loaders
 from utils.train_helper import save_model, load_model
 import json
+import os
 
 def load_configs(config_path):
     with open(config_path, 'r') as f:

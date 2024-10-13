@@ -1,8 +1,0 @@
-# train: data/train/images
-# val: data/train/images
-
-train: /home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/Back-hakaton/MLP_detect/mlp/data/train/images
-val: /home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/Back-hakaton/MLP_detect/mlp/data/train/images
-
-nc: 7  # Количество классов (0-6)
-names: ['0','1', '2', '3', '4', '5', '6']

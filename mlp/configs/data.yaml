@@ -4,5 +4,8 @@
 train: /home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/mlp/data/train/images
 val: /home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/mlp/data/valid/images
 
+# train: /home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/mlp/data/train_orig/images
+# val: /home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/mlp/data/train_orig/images
+
 nc: 8  # Количество классов (0-6)
 names: ['0','1', '2', '3', '4', '5', '6', '7']
