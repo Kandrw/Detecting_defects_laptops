@@ -45,12 +45,23 @@ export const MainPage = () => {
       const filesArray = Array.from(event.target.files);
       const validFormats = ["image/jpeg", "image/jpg", "image/png"];
 
-      const validImages = filesArray.filter((file) =>
-        validFormats.includes(file.type)
-      );
-
       const invalidFiles = filesArray.filter(
         (file) => !validFormats.includes(file.type)
+      );
+
+      const filesWithTooManyDots = filesArray.filter(
+        (file) => (file.name.match(/\./g) || []).length > 1
+      );
+
+      if (filesWithTooManyDots.length > 0) {
+        toast.error(
+          "У вас в имени файла замечено больше одной точки, переименуйте фотографию"
+        );
+        return;
+      }
+
+      const validImages = filesArray.filter((file) =>
+        validFormats.includes(file.type)
       );
 
       if (invalidFiles.length > 0) {
@@ -78,8 +89,8 @@ export const MainPage = () => {
     toast.info("Все изображения удалены!");
   };
 
+
   const handleSubmitImages = async () => {
-    // setLoading("first");
     if (selectedImages.length === 0) {
       toast.error("Вы не загрузили изображения!");
       return;
@@ -89,31 +100,36 @@ export const MainPage = () => {
       toast.error("Введите серийный номер!");
       return;
     }
-    
+
     const formData = new FormData();
     selectedImages.forEach((image) => {
       formData.append("images", image);
     });
     formData.append("serial_number", serialNumber);
-    setLoading("first");
+
     try {
-      
+      setLoading("first");
+      setIsSubmitted(true);
+
       const response = await api.postUpload(formData);
+
       if (response.status === 200) {
         toast.success("Фотографии отправлены на проверку успешно!");
         setSelectedImages([]);
-        
-        setIsSubmitted(true);
-        setTimeout(async () => {
-          const result = await response.data;
-          setLoading("second");
-          setEditedDefectData(result);
-        });
+
+        const result = await response.data;
+
+        setLoading("second");
+        setEditedDefectData(result);
       } else {
+        setIsSubmitted(false);
+        setLoading(null);
         toast.error("Ошибка при отправке фотографий!");
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
+      setIsSubmitted(false);
+      setLoading(null);
       toast.error("Ошибка сети при отправке фотографий!");
     }
   };

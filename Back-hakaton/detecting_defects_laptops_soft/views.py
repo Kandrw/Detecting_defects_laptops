@@ -74,16 +74,6 @@ class ImageUploadView(APIView):
             print("ML", out)
         
         result_data_s = []
-        # errors_str = [
-        #     "Lock",
-        #     "Unknown defect",
-        #     "the screw is missing",
-        #     "problem with the keys",
-        #     "chipped",
-        #     "broken pixel",
-        #     "scratch",
-        #     "no defect"
-        # ]
         errors_str = [
             "Lock",
             "UnknownDefect",
@@ -106,42 +96,74 @@ class ImageUploadView(APIView):
             "NoDefect":"",
             "ImgRes":""
         }
+        # data_img = []
+        # for i in range(len(results)):
+        #     with open(results[i], "r") as file:
+        #         for line in file:
+        #             print(line)
+        #             key = (errors_str[int(line[0])])
+                    
+        #             result_data[key] = result_data[key] + line[1:]
+        #             if(result_data[key][-1] == " " or result_data[key][-1] == "\n"):
+        #                 result_data[key] = result_data[key][:-1]
+            
+        #     img_io = io.BytesIO()
+        #     # img = Image.open(image)
+        #     img_data1 = Image.open(data_img_path[i])
+        #     # percent = (basewidth / float(img.size[0]))
+        #     # hsize = int(float(img.size[1]) * percent)
+        #     # img = img.resize((basewidth, hsize),PIL.Image.ANTIALIAS)
+        #     img_data1.save(img_io, format="JPEG")
+
+
+        #     new_pic= InMemoryUploadedFile(img_io, 
+        #         'ImageField',
+        #         'profile_pic',
+        #         'JPEG',
+        #         sys.getsizeof(img_io), None)
+            
+        #     with new_pic.open() as img_file:
+        #         img_content = img_file.read()
+        #         encoded_img = base64.b64encode(img_content).decode('utf-8')
+        #         img_format = images[i].content_type  # Получаем формат изображения (например, image/png)
+        #         # Форматируем изображение в нужный вид
+        #         img_data = f"data:{img_format};base64,{encoded_img}"
+        #     data_img.append(img_data)
+        # result_data["ImgRes"] = data_img
+        # print(result_data)
+
         data_img = []
         for i in range(len(results)):
             with open(results[i], "r") as file:
                 for line in file:
                     print(line)
                     key = (errors_str[int(line[0])])
+                    result_data[key] += line[1:].strip()  # Используйте strip() для удаления пробелов и новых строк
                     
-                    result_data[key] = result_data[key] + line[1:]
-                    if(result_data[key][-1] == " " or result_data[key][-1] == "\n"):
-                        result_data[key] = result_data[key][:-1]
-            
-            img_io = io.BytesIO()
-            # img = Image.open(image)
+            img_io = io.BytesIO()  # Перенесите сюда
             img_data1 = Image.open(data_img_path[i])
-            # percent = (basewidth / float(img.size[0]))
-            # hsize = int(float(img.size[1]) * percent)
-            # img = img.resize((basewidth, hsize),PIL.Image.ANTIALIAS)
             img_data1.save(img_io, format="JPEG")
+            img_io.seek(0)  # Сбросьте указатель в начале буфера
 
-
-            new_pic= InMemoryUploadedFile(img_io, 
+            new_pic = InMemoryUploadedFile(img_io, 
                 'ImageField',
                 'profile_pic',
                 'JPEG',
-                sys.getsizeof(img_io), None)
-            
+                img_io.getbuffer().nbytes, None)  # Измените на img_io.getbuffer().nbytes
+
             with new_pic.open() as img_file:
                 img_content = img_file.read()
                 encoded_img = base64.b64encode(img_content).decode('utf-8')
-                img_format = images[i].content_type  # Получаем формат изображения (например, image/png)
-                # Форматируем изображение в нужный вид
+                img_format = images[i].content_type
                 img_data = f"data:{img_format};base64,{encoded_img}"
+            
             data_img.append(img_data)
+        print(f"Number of images processed: {len(data_img)}")  # Выводим количество изображений
         result_data["ImgRes"] = data_img
-        print(result_data)
+        # print(result_data)
         return JsonResponse(result_data, status=200)
+
+        # return JsonResponse(result_data, status=200)
 
 from django.http import JsonResponse
 from rest_framework.decorators import api_view

@@ -88,10 +88,6 @@ python run_predictions.py --image <path_to_image>
 ```plaintext
 python fine_tune.py
 ```
-## Логирование и метрики
-Для логирования метрик тренировки вы можете использовать встроенное логирование с TensorBoard:
-```plaintext
-tensorboard --logdir=runs
-```
-Графики метрик будут доступны по адресу http://localhost:6006.
+
+
 

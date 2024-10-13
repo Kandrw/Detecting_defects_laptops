@@ -2,12 +2,12 @@
   "model": "yolov8s.pt",
   "img_size": [640, 480],
   "batch": 24,
-  "epochs": 10,
+  "epochs": 15,
   "optimizer": "AdamW",
   "device": "cuda",
   "model_save_path": "models/save_model/detection_model",
-  "learning_rate": 0.00125,
-  "weight_decay": 0.0005,
-  "iou": 0.65,
+  "learning_rate": 0.00025,
+  "weight_decay": 0.0004,
+  "iou": 0.5,
   "conf": 0.25
 }
