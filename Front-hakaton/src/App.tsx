@@ -79,6 +79,7 @@ export const MainPage = () => {
   };
 
   const handleSubmitImages = async () => {
+    // setLoading("first");
     if (selectedImages.length === 0) {
       toast.error("Вы не загрузили изображения!");
       return;
@@ -88,19 +89,20 @@ export const MainPage = () => {
       toast.error("Введите серийный номер!");
       return;
     }
-
+    
     const formData = new FormData();
     selectedImages.forEach((image) => {
       formData.append("images", image);
     });
     formData.append("serial_number", serialNumber);
-
+    setLoading("first");
     try {
+      
       const response = await api.postUpload(formData);
       if (response.status === 200) {
         toast.success("Фотографии отправлены на проверку успешно!");
         setSelectedImages([]);
-        setLoading("first");
+        
         setIsSubmitted(true);
         setTimeout(async () => {
           const result = await response.data;
@@ -244,6 +246,7 @@ export const MainPage = () => {
             className="px-6 py-2 w-full bg-blue-500 text-white rounded-md hover:bg-blue-600"
             onClick={handleSubmitImages}
           >
+            
             Отправить фотографии на проверку
           </button>
         </div>

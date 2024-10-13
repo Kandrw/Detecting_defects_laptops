@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
 from django.http import HttpResponse, JsonResponse
+
 import time
 
 
@@ -16,8 +17,14 @@ from detecting_defects_laptops_soft.models import ImageModel
 
 import subprocess
 from subprocess import Popen, PIPE
-
+from PIL import Image
 from pathlib import Path
+
+from django.core.files.uploadedfile import InMemoryUploadedFile
+
+import io
+import PIL
+import sys
 
 class ImageUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -28,7 +35,7 @@ class ImageUploadView(APIView):
         ARGS_img = ""
         PATH_OUTPUT = "/home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/mlp/output_txt_files/"
         results = []
-        data_img = []
+        data_img_path = []
         i = 0
         for image in images:
             ImageModel.objects.create(image=image, serial_number=serial_number)
@@ -45,20 +52,22 @@ class ImageUploadView(APIView):
             results.append(PATH_OUTPUT + str(Path(image.name).stem) + ".txt")
             # path_img = PATH_OUTPUT + str(image)
             #data_img.append(img_data)
-            with images[i].open() as img_file:
-                img_content = img_file.read()
-                encoded_img = base64.b64encode(img_content).decode('utf-8')
-                img_format = images[i].content_type  # Получаем формат изображения (например, image/png)
+            # with images[i].open() as img_file:
+            #     img_content = img_file.read()
+            #     encoded_img = base64.b64encode(img_content).decode('utf-8')
+            #     img_format = images[i].content_type  # Получаем формат изображения (например, image/png)
 
-                # Форматируем изображение в нужный вид
-                img_data = f"data:{img_format};base64,{encoded_img}"
-            data_img.append(img_data)
+            #     # Форматируем изображение в нужный вид
+            #     img_data = f"data:{img_format};base64,{encoded_img}"
+            # data_img_path.append(img_data)
+            print("image -------------------", type(image))
+            data_img_path.append(PATH_OUTPUT + str(image.name))
             # results.append(PATH_OUTPUT + "photo_2024-10-09_14-50-32.txt")
             i += 1
 
         PATH_ML = "../mlp/run_predictions.py"
         PATH_RUN = "/home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/mlp"
-        
+        # InMemoryUploadedFile
         # ARGS = images
         if 1:
             out, err = Popen('python3 ' + PATH_ML + " " + ARGS_img, cwd=PATH_RUN, shell=True, stdout=PIPE).communicate()
@@ -95,8 +104,9 @@ class ImageUploadView(APIView):
             "BrokenPixel":"",
             "Scratch":"",
             "NoDefect":"",
-            "ImgRes":data_img
+            "ImgRes":""
         }
+        data_img = []
         for i in range(len(results)):
             with open(results[i], "r") as file:
                 for line in file:
@@ -107,7 +117,29 @@ class ImageUploadView(APIView):
                     if(result_data[key][-1] == " " or result_data[key][-1] == "\n"):
                         result_data[key] = result_data[key][:-1]
             
+            img_io = io.BytesIO()
+            # img = Image.open(image)
+            img_data1 = Image.open(data_img_path[i])
+            # percent = (basewidth / float(img.size[0]))
+            # hsize = int(float(img.size[1]) * percent)
+            # img = img.resize((basewidth, hsize),PIL.Image.ANTIALIAS)
+            img_data1.save(img_io, format="JPEG")
 
+
+            new_pic= InMemoryUploadedFile(img_io, 
+                'ImageField',
+                'profile_pic',
+                'JPEG',
+                sys.getsizeof(img_io), None)
+            
+            with new_pic.open() as img_file:
+                img_content = img_file.read()
+                encoded_img = base64.b64encode(img_content).decode('utf-8')
+                img_format = images[i].content_type  # Получаем формат изображения (например, image/png)
+                # Форматируем изображение в нужный вид
+                img_data = f"data:{img_format};base64,{encoded_img}"
+            data_img.append(img_data)
+        result_data["ImgRes"] = data_img
         print(result_data)
         return JsonResponse(result_data, status=200)
 
