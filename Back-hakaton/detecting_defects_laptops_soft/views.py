@@ -164,6 +164,138 @@ class ImageUploadView(APIView):
         return JsonResponse(result_data, status=200)
 
         # return JsonResponse(result_data, status=200)
+class ImageUploadView2(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, *args, **kwargs):
+        serial_number = request.data.get('serial_number')
+        images = request.FILES.getlist('images')  # Получаем все изображения
+        ARGS_img = ""
+        PATH_OUTPUT = "/home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/mlp/output_txt_files/"
+        results = []
+        data_img_path = []
+        
+        # Проходим по каждому изображению
+        for image in images:
+            ImageModel.objects.create(image=image, serial_number=serial_number)
+            abs_path = "/home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/Back-hakaton/"
+            dir = abs_path + f'media/images/{serial_number}/'
+            ARGS_img += str(dir) + str(image) + " "
+            
+            # Добавляем пути для результата
+            results.append(PATH_OUTPUT + str(Path(image.name).stem) + ".txt")
+            data_img_path.append(dir + str(image))  # Сохраняем полный путь до изображения
+
+        # Запуск модели
+        PATH_ML = "../mlp/run_predictions.py"
+        PATH_RUN = "/home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/mlp"
+        
+        out, err = Popen('python3 ' + PATH_ML + " " + ARGS_img, cwd=PATH_RUN, shell=True, stdout=PIPE).communicate()
+        print("ML Output:", out)
+        
+        result_data_s = []
+        errors_str = [
+            "Lock", "UnknownDefect", "MissingScrew", "KeysProblems",
+            "Chipped", "BrokenPixel", "Scratch", "NoDefect"
+        ]
+        
+        result_data = {
+            "Lock": "", "UnknownDefect": "", "MissingScrew": "", "KeysProblems": "",
+            "Chipped": "", "BrokenPixel": "", "Scratch": "", "NoDefect": "", "ImgRes": []
+        }
+        
+        # Подготовка изображений для ответа
+        data_img = []
+        for i, result_path in enumerate(results):
+            with open(result_path, "r") as file:
+                for line in file:
+                    key = errors_str[int(line[0])]
+                    result_data[key] = result_data[key] + line[1:].strip()
+            
+            img_io = io.BytesIO()
+            img_data = Image.open(data_img_path[i])  # Открываем изображение
+            img_data.save(img_io, format="JPEG")
+            
+            # Получаем контент изображения и кодируем его в base64
+            img_io.seek(0)
+            img_content = img_io.read()
+            encoded_img = base64.b64encode(img_content).decode('utf-8')
+            img_format = "image/jpeg"  # Если все изображения в формате JPEG
+
+            # Добавляем изображение в результат
+            img_data_base64 = f"data:{img_format};base64,{encoded_img}"
+            data_img.append(img_data_base64)
+        
+        result_data["ImgRes"] = data_img  # Все изображения в base64 формате
+        print("=========", len(data_img))
+        return JsonResponse(result_data, status=200)
+
+
+class ImageUploadView3(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, *args, **kwargs):
+        serial_number = request.data.get('serial_number')
+        images = request.FILES.getlist('images')  # Получаем все изображения
+        ARGS_img = ""
+        PATH_OUTPUT = "/home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/mlp/output_txt_files/"
+        results = []
+        data_img_path = []
+        
+        # Проходим по каждому изображению
+        for image in images:
+            ImageModel.objects.create(image=image, serial_number=serial_number)
+            abs_path = "/home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/Back-hakaton/"
+            dir = abs_path + f'media/images/{serial_number}/'
+            ARGS_img += str(dir) + str(image) + " "
+            
+            # Добавляем пути для результата
+            results.append(PATH_OUTPUT + str(Path(image.name).stem) + ".txt")
+            data_img_path.append(dir + str(image))  # Сохраняем полный путь до изображения
+
+        # Запуск модели
+        PATH_ML = "../mlp/run_predictions.py"
+        PATH_RUN = "/home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/mlp"
+        
+        out, err = Popen('python3 ' + PATH_ML + " " + ARGS_img, cwd=PATH_RUN, shell=True, stdout=PIPE).communicate()
+        print("ML Output:", out)
+        
+        result_data_s = []
+        errors_str = [
+            "Lock", "UnknownDefect", "MissingScrew", "KeysProblems",
+            "Chipped", "BrokenPixel", "Scratch", "NoDefect"
+        ]
+        
+        result_data = {
+            "Lock": "", "UnknownDefect": "", "MissingScrew": "", "KeysProblems": "",
+            "Chipped": "", "BrokenPixel": "", "Scratch": "", "NoDefect": "", "ImgRes": []
+        }
+        
+        # Подготовка изображений для ответа
+        data_img = []
+        for i, result_path in enumerate(results):
+            with open(result_path, "r") as file:
+                for line in file:
+                    key = errors_str[int(line[0])]
+                    result_data[key] = result_data[key] + line[1:].strip()
+            
+            img_io = io.BytesIO()
+            img_data = Image.open(data_img_path[i])  # Открываем изображение
+            img_data.save(img_io, format="JPEG")
+            
+            # Получаем контент изображения и кодируем его в base64
+            img_io.seek(0)
+            img_content = img_io.read()
+            encoded_img = base64.b64encode(img_content).decode('utf-8')
+            img_format = "image/jpeg"  # Если все изображения в формате JPEG
+
+            # Добавляем изображение в результат
+            img_data_base64 = f"data:{img_format};base64,{encoded_img}"
+            data_img.append(img_data_base64)
+        
+        result_data["ImgRes"] = data_img  # Все изображения в base64 формате
+        
+        return JsonResponse(result_data, status=200)
 
 from django.http import JsonResponse
 from rest_framework.decorators import api_view

@@ -293,7 +293,8 @@ export const MainPage = () => {
                 <h3 className="text-xl font-bold mb-2">
                   Результат изображения
                 </h3>
-                {editedDefectData.ImgRes ? (
+                
+                {/* {editedDefectData.ImgRes ? (
                   <img
                     src={editedDefectData.ImgRes}
                     alt="Результат"
@@ -301,8 +302,19 @@ export const MainPage = () => {
                   />
                 ) : (
                   <p className="text-gray-500">Изображение не доступно</p>
-                )}
-
+                )} */}
+                {Array.isArray(editedDefectData.ImgRes) && editedDefectData.ImgRes.length > 0 ? (
+            editedDefectData.ImgRes.map((imgSrc, index) => (
+              <img
+                key={index}
+                src={imgSrc}
+                alt={`Результат ${index + 1}`}
+                className="w-full h-auto rounded-md pt-7"
+              />
+            ))
+          ) : (
+            <p className="text-gray-500">Изображение не доступно</p>
+          )}
                 <div className="flex gap-4 mt-6">
                   <button
                     className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
