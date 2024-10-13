@@ -3,6 +3,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { api } from "./api/api";
 import { ReportContainer } from "./widgets/ReportContainer";
+import { Bars } from "react-loader-spinner";
 
 interface IDefects {
   Lock: string;
@@ -23,6 +24,7 @@ export const MainPage = () => {
     null
   );
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [loading, setLoading] = useState<"first" | "second" | null>(null);
 
   const handleDefectChange = (key: keyof IDefects, value: string) => {
     if (editedDefectData) {
@@ -98,9 +100,11 @@ export const MainPage = () => {
       if (response.status === 200) {
         toast.success("Фотографии отправлены на проверку успешно!");
         setSelectedImages([]);
+        setLoading("first");
         setIsSubmitted(true);
         setTimeout(async () => {
           const result = await response.data;
+          setLoading("second");
           setEditedDefectData(result);
         });
       } else {
@@ -244,35 +248,19 @@ export const MainPage = () => {
           </button>
         </div>
       ) : (
-        // <div className="flex flex-row items-start justify-center">
-        //   {editedDefectData && (
-        //     <div className="p-4 bg-gray-100 rounded-md flex flex-col items-center">
-        //       <h3 className="text-xl font-bold mb-2">Результаты проверки</h3>
-        //       <ReportContainer
-        //         defectsData={editedDefectData}
-        //         onDefectChange={handleDefectChange}
-        //       />
-
-        //       <div className="flex gap-4 mt-4">
-        //         <button
-        //           className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-        //           onClick={handleSubmitReport}
-        //         >
-        //           Получить отчет (DOCX)
-        //         </button>
-
-        //         <button
-        //           className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-        //           onClick={handleSubmitReportPDF}
-        //         >
-        //           Получить отчет (PDF)
-        //         </button>
-        //       </div>
-        //     </div>
-        //   )}
-        // </div>
         <div className="flex flex-row bg-gray-200 rounded-md justify-between items-start max-w-6xl mx-auto mt-8">
-          {editedDefectData && (
+          {loading === "first" && (
+            <div className="flex items-center">
+              <Bars
+                height={40}
+                width={40}
+                color="#00BFFF"
+                ariaLabel="loading-indicator"
+              />
+              <p className="ml-2">Загрузка данных...</p>
+            </div>
+          )}
+          {editedDefectData && loading !== "first" && (
             <>
               <div className="w-full p-4 ">
                 <h3 className="text-xl font-bold mb-2">Результаты проверки</h3>
