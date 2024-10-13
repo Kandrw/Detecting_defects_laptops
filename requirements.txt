@@ -20,3 +20,4 @@ scikit-learn
 # pyyaml==5.4.1
 pyyaml
 Pillow==8.4.0
+reportlab

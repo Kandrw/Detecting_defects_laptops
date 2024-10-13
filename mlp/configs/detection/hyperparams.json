@@ -1,0 +1,11 @@
+{
+  "model": "yolov8s.pt",
+  "img_size": 640,
+  "batch": 24,
+  "epochs": 20,
+  "optimizer": "AdamW",
+  "learning_rate": 0.0005,
+  "weight_decay": 0.001,
+  "device": "cuda",
+  "model_save_path": "models/save_model/detection_model"
+}

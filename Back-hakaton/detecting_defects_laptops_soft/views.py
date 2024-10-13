@@ -13,11 +13,21 @@ from django.core.files.base import ContentFile
 
 from detecting_defects_laptops_soft.models import ImageModel
 
-from MLP_detect.apps import Train
 
+import subprocess
+from subprocess import Popen, PIPE
+# from MLP_detect.mlp.mlp_api import Predict
 
+# from detecting_defects_laptops_soft.mlp.run_predictions import Predict_
 
+# from mlp_api import Predict
+# from models.detection import DetectionModel
+# from MLP_detect.mlp.run_predictions import Predict_
 
+# from MLP_detect.mlp.test import Predict
+
+# from mlp.mlp_api import Predict_
+from pathlib import Path
 
 class ImageUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -25,10 +35,16 @@ class ImageUploadView(APIView):
     def post(self, request, *args, **kwargs):
         serial_number = request.data.get('serial_number')
         images = request.FILES.getlist('images')
-
+        ARGS_img = ""
+        PATH_OUTPUT = "/home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/mlp/output_txt_files/"
+        RESULTS = []
         for image in images:
             ImageModel.objects.create(image=image, serial_number=serial_number)
-
+            print("[get] image", image)
+            abs_path = "/home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/Back-hakaton/"
+            dir = abs_path + f'media/images/{serial_number}/'
+            ARGS_img += str(dir)+str(image) + " "
+            RESULTS.append(PATH_OUTPUT + str(Path(image).stem))
 
         # Здесь будет правка при готовой нейросети
         if images:
@@ -42,17 +58,47 @@ class ImageUploadView(APIView):
         else:
             img_data = None
 
-        Train()
+        # Predict(images)
+        # subprocess.run(["python", "./mlp/run_predictions.py"])
+        # PATH_ML = "/home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/mlp/run_predictions.py"
+        
+        # os.environ["PYTHONPATH"] = "$PYTHONPATH:../mlp"
 
-        result_data = {
-            "Scratches": "Detected",
-            "BrokenPixels": "Not Detected",
-            "ProblemsWithButtons": "Detected",
-            "Zamok": "Not Detected",
-            "MissingScrew": "Detected",
-            "Chips": "Not Detected",
-            "ImgRes": img_data
-        }
+
+        # result = subprocess.run(['export', 'PYTHONPATH'], capture_output=True, text=True)
+        # print(result.stdout)
+
+
+        PATH_ML = "../mlp/run_predictions.py"
+        PATH_RUN = "/home/andrey/Документы/Хакатон_13.10.24/Detecting_defects_laptops/mlp"
+        
+        # ARGS = images
+
+        out, err = Popen('python3 ' + PATH_ML + " " + ARGS_img, cwd=PATH_RUN, shell=True, stdout=PIPE).communicate()
+        # print("DDDDDDDDF: ", str(out, 'utf-8'))
+        # path_res = Path().stem
+        result_data_s = []
+        for i in range(len(RESULTS)):
+            str1 = "Not Detected"
+            str2 = "Not Detected"
+            str3 = "Not Detected"
+            str4 = "Not Detected"
+            str5 = "Not Detected"
+            str6 = "Not Detected"
+            
+            
+            if():
+            str1 = asdasdd
+            result_data = {
+                "Scratches": str1,
+                "BrokenPixels": "Not Detected",
+                "ProblemsWithButtons": "Detected",
+                "Zamok": "Not Detected",
+                "MissingScrew": "Detected",
+                "Chips": "Not Detected",
+                "ImgRes": img_data
+            }
+            result_data_s.append(result_data)
         
 
         return JsonResponse(result_data, status=200)

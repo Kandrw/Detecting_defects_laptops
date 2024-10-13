@@ -14,7 +14,15 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+import sys
+import os
 
+# Добавляем путь к папке со скриптами
+# sys.path.append(os.path.join(BASE_DIR, 'mlp'))
+
+# sys.path.append(os.path.join(BASE_DIR, 'detecting_defects_laptops_soft.mlp.models'))
+
+# from . import models
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -62,7 +70,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     "detecting_defects_laptops_soft",
-    "MLP_detect"
+    "MLP_detect",
+    # "detecting_defects_laptops_soft.mlp"
+    # "detecting_defects_laptops_soft.mlp.models"
+    # "MLP_detect.mlp"
 ]
 
 REST_FRAMEWORK = {

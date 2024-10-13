@@ -1,5 +1,5 @@
 import torch
-from PIL import Image
+from PIL import Image, ImageDraw
 from models.classification import ClassificationModel
 from models.detection import DetectionModel
 from utils.train_helper import load_model
@@ -12,8 +12,8 @@ def load_configs(config_path):
         return json.load(f)
 
 def classify_image(image, classification_model, transform):
-    image = transform(image).unsqueeze(0)
-    outputs = classification_model(image)
+    image_tensor = transform(image).unsqueeze(0)
+    outputs = classification_model(image_tensor)
     _, preds = torch.max(outputs, 1)
     return preds.item()
 
@@ -21,7 +21,7 @@ def detect_defects(image_path, detection_model):
     results = detection_model.detect(image_path)
     return results
 
-def main(image_paths, serial_number):
+def Predict_(image_paths):
     classification_config = load_configs('configs/classification/hyperparams.json')
     detection_config = load_configs('configs/detection/hyperparams.json')
 
@@ -40,17 +40,18 @@ def main(image_paths, serial_number):
                              std=[0.229, 0.224, 0.225])
     ])
 
-    output_txt_folder = 'output_txt_files'  # Папка для txt-файлов
+    output_txt_folder = 'output_txt_files'  # Папка для txt-файлов и аннотированных изображений
     os.makedirs(output_txt_folder, exist_ok=True)
 
     report = {
-        'serial_number': serial_number,
         'defects': []
     }
     defect_found = False
 
     for image_path in image_paths:
         image = Image.open(image_path).convert('RGB')
+        image_draw = image.copy()  # Создаём копию изображения для рисования
+        draw = ImageDraw.Draw(image_draw)
 
         classification_result = classify_image(image, classification_model, transform)
         detection_results = detect_defects(image_path, detection_model)
@@ -59,10 +60,9 @@ def main(image_paths, serial_number):
         detections = detection_results[0]  # Обрабатываем по одному изображению
         boxes = detections.boxes  # Объект с детекциями
 
-        # Подготовка имени файла для сохранения
+        # Подготовка имени файла для сохранения, сохраняем оригинальное имя
         image_filename = os.path.basename(image_path)
-        image_name = os.path.splitext(image_filename)[0]
-        txt_filename = image_name + ".txt"
+        txt_filename = os.path.splitext(image_filename)[0] + ".txt"
         txt_filepath = os.path.join(output_txt_folder, txt_filename)
 
         if boxes is not None and len(boxes) > 0:
@@ -77,18 +77,25 @@ def main(image_paths, serial_number):
                 line = f"{cls_id} {x1} {y1} {x2} {y2}"
                 lines.append(line)
 
+                # Рисуем прямоугольник на изображении
+                draw.rectangle([(x1, y1), (x2, y2)], outline='red', width=2)
+                # Добавляем метку класса
+                draw.text((x1, y1 - 10), str(cls_id), fill='red')
+
             # Сохранение в txt-файл
             with open(txt_filepath, 'w') as f:
                 for line in lines:
                     f.write(line + '\n')
         else:
             print(f"На изображении {image_path} дефекты не обнаружены.")
-            # Записываем в txt-файл информацию об отсутствии дефекта
             width, height = image.size
-            # Если хотите записать координаты, охватывающие всё изображение
             x1, y1, x2, y2 = 0, 0, width, height
             with open(txt_filepath, 'w') as f:
                 f.write(f"{7} {x1} {y1} {x2} {y2}\n")  # Используем класс 7 и координаты всего изображения
+
+        # Сохраняем аннотированное изображение с таким же именем, как и оригинал
+        annotated_image_path = os.path.join(output_txt_folder, image_filename)
+        image_draw.save(annotated_image_path)
 
         # Анализ результатов
         if classification_result != 7 or (boxes is not None and len(boxes) > 0):
@@ -105,11 +112,8 @@ def main(image_paths, serial_number):
     # Возвращаем отчёт
     return report
 
-if __name__ == "__main__":
+if __name__ == "__main__" and False:
     # Пример использования
-    image_paths = ['data/train/images/2024-01-15 14-34-26.jpg', 'data/train/images/2024-01-15 14-32-34.jpg']
-    serial_number = 'ABC123456'
-    result = main(image_paths, serial_number)
+    image_paths = ['data/test/images/2024-01-15-14-32-34_jpg.rf.ea5c015b66fcd5eff4356034a08a46eb.jpg', 'data/test/images/IMG_7559_JPG.rf.922d0e29361aa049ac2ebee8b534a6fe.jpg']
+    result = Predict_(image_paths)
     print(result)
-
-
